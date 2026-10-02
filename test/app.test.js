@@ -232,3 +232,85 @@ test('The browser interface is served successfully', async () => {
     assert.match(response.text, /TaskFlow/);
     assert.match(response.text, /\/app.js/);
 });
+
+// Scheduling fields are validated and preserved across deployments/restarts.
+for (const priority of ['low', 'medium', 'high']) {
+    test(`Persists ${priority} priority and a leap-day deadline`, async () => {
+        const created = await request(app).post('/api/tasks')
+            .send({ title: 'Plan release', priority, dueDate: '2028-02-29' }).expect(201);
+        await request(app).patch(`/api/tasks/${created.body.id}`)
+            .send({ completed: true }).expect(200);
+        const restarted = await request(createApp({ dataFile })).get('/api/tasks').expect(200);
+        assert.equal(restarted.body[0].priority, priority);
+        assert.equal(restarted.body[0].dueDate, '2028-02-29');
+        assert.equal(restarted.body[0].completed, true);
+    });
+}
+for (const priority of ['urgent', '', null, 1, {}]) {
+    test(`Rejects invalid priority ${JSON.stringify(priority)} without writes`, async () => {
+        await request(app).post('/api/tasks').send({ title: 'Invalid', priority }).expect(400);
+        assert.equal(fs.existsSync(dataFile), false);
+    });
+}
+for (const dueDate of ['2026-02-29', '2026-04-31', '2026-13-01', 'not-date', '', 123, {}, '2026-1-01']) {
+    test(`Rejects invalid deadline ${JSON.stringify(dueDate)} without writes`, async () => {
+        await request(app).post('/api/tasks').send({ title: 'Invalid', dueDate }).expect(400);
+        assert.equal(fs.existsSync(dataFile), false);
+    });
+}
+test('Optional planning fields have backwards-compatible defaults', async () => {
+    const created = await request(app).post('/api/tasks').send({ title: 'Defaults' }).expect(201);
+    assert.equal(created.body.priority, 'medium');
+    assert.equal(created.body.dueDate, null);
+    await request(app).post('/api/tasks').send({ title: 'No deadline', dueDate: null }).expect(201);
+});
+test('Legacy saved tasks remain readable and completable without data loss', async () => {
+    const legacy = { id: 'legacy', title: 'Existing work', completed: false, createdAt: '2026-01-01T00:00:00Z' };
+    fs.writeFileSync(dataFile, JSON.stringify([legacy]));
+    const migrated = createApp({ dataFile });
+    const response = await request(migrated).patch('/api/tasks/legacy').send({ completed: true }).expect(200);
+    assert.equal(response.body.title, legacy.title);
+    assert.equal(JSON.parse(fs.readFileSync(dataFile))[0].completed, true);
+});
+
+const model = require('../public/model');
+const planningTasks = [
+    { title: 'Release API', priority: 'high', dueDate: '2026-10-01', completed: false, createdAt: '2026-09-01' },
+    { title: 'Write report', priority: 'low', dueDate: '2026-10-02', completed: false, createdAt: '2026-09-03' },
+    { title: 'Completed work', priority: 'medium', dueDate: '2026-09-01', completed: true, createdAt: '2026-09-02' },
+    { title: 'Legacy task', completed: false, createdAt: '2026-08-01' }
+];
+const defaultFilters = { search: '', priority: 'all', status: 'all', sort: 'newest' };
+function select(overrides = {}) {
+    return model.select(planningTasks, { ...defaultFilters, ...overrides }, '2026-10-02');
+}
+test('Overdue excludes completed tasks, today and unscheduled tasks', () => {
+    assert.deepEqual(model.summary(planningTasks, '2026-10-02'), { total: 4, completed: 1, pending: 3, overdue: 1 });
+    assert.equal(model.summary([]).total, 0);
+    assert.equal(model.overdue(planningTasks[0], '2026-10-01'), false);
+    assert.equal(typeof model.overdue(planningTasks[0]), 'boolean');
+});
+test('Planning calendar uses local date components with zero padding', () => {
+    assert.equal(model.today(new Date(2026, 0, 2, 23, 30)), '2026-01-02');
+    assert.match(model.today(), /^\d{4}-\d{2}-\d{2}$/);
+});
+test('Search ignores case and surrounding spaces and combines with priority', () => {
+    assert.equal(select({ search: ' API ', priority: 'high' }).length, 1);
+    assert.equal(select({ search: 'API', priority: 'low' }).length, 0);
+    assert.equal(select({ search: 'missing' }).length, 0);
+});
+for (const [status, count] of [['all', 4], ['pending', 3], ['completed', 1], ['overdue', 1]]) {
+    test(`Status filter ${status} returns only matching tasks`, () => {
+        assert.equal(select({ status }).length, count);
+    });
+}
+test('Sorting supports newest, priority and due dates without mutating data', () => {
+    const original = JSON.stringify(planningTasks);
+    assert.equal(select()[0].title, 'Write report');
+    assert.equal(select({ sort: 'priority' })[0].title, 'Release API');
+    assert.equal(select({ sort: 'due' })[0].title, 'Completed work');
+    assert.equal(select({ sort: 'due' }).at(-1).title, 'Legacy task');
+    assert.equal(select({ priority: 'medium' }).length, 2);
+    assert.equal(JSON.stringify(planningTasks), original);
+    assert.equal(model.select([], defaultFilters).length, 0);
+});

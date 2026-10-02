@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 /*
  * SIT223 Task 7.3HD - Task Management Application
@@ -131,6 +131,25 @@ function createApp(options = {}) {
         res.json(tasks);
     });
 
+    // Validate optional scheduling fields before any disk write.
+    function planningError(body) {
+        if (body.priority !== undefined &&
+            !['low', 'medium', 'high'].includes(body.priority)) {
+            return 'Priority must be low, medium or high';
+        }
+        if (body.dueDate === undefined || body.dueDate === null) return null;
+        if (typeof body.dueDate !== 'string' ||
+            !/^\d{4}-\d{2}-\d{2}$/.test(body.dueDate)) {
+            return 'Due date must be a valid YYYY-MM-DD date';
+        }
+        const date = new Date(`${body.dueDate}T00:00:00Z`);
+        if (!Number.isFinite(date.getTime()) ||
+            date.toISOString().slice(0, 10) !== body.dueDate) {
+            return 'Due date must be a real calendar date';
+        }
+        return null;
+    }
+
     // CREATE: validate the title and generate the remaining fields server-side.
     app.post('/api/tasks', (req, res) => {
         const title = req.body && req.body.title;
@@ -143,7 +162,12 @@ function createApp(options = {}) {
             });
         }
 
+        const error = planningError(req.body);
+        if (error) return res.status(400).json({ error });
+
         const task = {
+            priority: req.body.priority || 'medium',
+            dueDate: req.body.dueDate || null,
             id: randomUUID(),
             title: title.trim(),
             completed: false,

@@ -1,12 +1,12 @@
 {
   "name": "sit223-7.3hd",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.1.0",
+  "description": "TaskFlow work planner with priorities, deadlines and monitored Jenkins delivery",
   "main": "index.js",
   "scripts": {
     "test": "node --test test/app.test.js",
     "start": "node src/server.js",
-    "test:coverage": "c8 --include=src/app.js --check-coverage --lines=95 --functions=95 --branches=80 --reporter=text --reporter=html --reporter=lcov node --test test/app.test.js",
+    "test:coverage": "c8 --include=src/app.js --include=public/model.js --check-coverage --lines=95 --functions=95 --branches=80 --reporter=text --reporter=html --reporter=lcov node --test test/app.test.js",
     "lint": "eslint src public test scripts eslint.config.js --max-warnings=0",
     "build": "node scripts/build.js"
   },

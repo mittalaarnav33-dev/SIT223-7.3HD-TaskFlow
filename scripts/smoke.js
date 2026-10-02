@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 /*
  * Test the actual deployed service over HTTP.
@@ -56,7 +56,7 @@ async function run() {
     checks.push('Web interface served');
 
     const created = await (await call('/api/tasks', 201,
-        jsonOptions('POST', { title: `Deployment test ${Date.now()}` })
+        jsonOptions('POST', { title: `Deployment test ${Date.now()}`, priority: 'high', dueDate: '2028-02-29' })
     )).json();
 
     assert.equal(typeof created.id, 'string');
@@ -65,7 +65,10 @@ async function run() {
 
     const tasks = await (await call('/api/tasks', 200)).json();
     assert.ok(tasks.some(task => task.id === taskId));
-    checks.push('Read task');
+    const persisted = tasks.find(task => task.id === taskId);
+    assert.equal(persisted.priority, 'high');
+    assert.equal(persisted.dueDate, '2028-02-29');
+    checks.push('Read task with persisted priority and deadline');
 
     const updated = await (await call(`/api/tasks/${taskId}`, 200,
         jsonOptions('PATCH', { completed: true })
@@ -75,7 +78,13 @@ async function run() {
     checks.push('Complete task');
 
     await call('/api/tasks', 400, jsonOptions('POST', { title: '' }));
-    checks.push('Reject invalid input');
+    await call('/api/tasks', 400, jsonOptions('POST', {
+        title: 'Invalid deadline', dueDate: '2026-02-29'
+    }));
+    await call('/api/tasks', 400, jsonOptions('POST', {
+        title: 'Invalid priority', priority: 'urgent'
+    }));
+    checks.push('Reject invalid title, priority and calendar date');
 
     const metrics = await (await call('/metrics', 200)).text();
     assert.match(metrics, /taskapp_http_requests_total/);

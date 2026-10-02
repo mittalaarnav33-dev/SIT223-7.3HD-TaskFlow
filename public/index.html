@@ -1,57 +1,31 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TaskFlow | Task Manager</title>
-    <link rel="stylesheet" href="/styles.css">
-    <script src="/app.js" defer></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TaskFlow | Work planner</title>
+<link rel="stylesheet" href="/styles.css">
+<script src="/model.js" defer></script><script src="/app.js" defer></script>
 </head>
 <body>
-    <main class="container">
-        <header>
-            <div>
-                <p class="eyebrow">AARNAV JAIN · SIT223 7.3HD</p>
-                <h1>TaskFlow</h1>
-                <p class="subtitle">Plan your work. Track your progress.</p>
-            </div>
-            <span id="health" class="badge">Checking server…</span>
-        </header>
-
-        <section class="stats" aria-label="Task statistics">
-            <article><span>Total tasks</span><strong id="total">0</strong></article>
-            <article><span>In progress</span><strong id="pending">0</strong></article>
-            <article><span>Completed</span><strong id="completed">0</strong></article>
-        </section>
-
-        <section class="panel">
-            <h2>Create a task</h2>
-            <form id="task-form">
-                <label for="title">Task title</label>
-                <div class="form-row">
-                    <input id="title" name="title" type="text"
-                        maxlength="120" required
-                        placeholder="What do you need to work on?">
-                    <button id="add-button" type="submit">Add task</button>
-                </div>
-            </form>
-            <p id="message" role="status" aria-live="polite"></p>
-        </section>
-
-        <section class="panel">
-            <div class="section-heading">
-                <h2>Your tasks</h2>
-                <button id="refresh" type="button" class="secondary">Refresh</button>
-            </div>
-            <p id="empty">No tasks yet. Add your first task above.</p>
-            <ul id="task-list" aria-label="Tasks"></ul>
-        </section>
-
-        <footer>
-            <span id="environment">Loading environment…</span>
-            <a href="/health">Health</a>
-            <a href="/metrics">Metrics</a>
-        </footer>
-    </main>
-</body>
-</html>
+<aside class="sidebar"><a class="brand" href="/">◈ TaskFlow</a><p class="side-label">WORKSPACE</p>
+<div class="nav-active">My planner <span>01</span></div>
+<div class="side-note"><strong>A little structure.<br>A clearer day.</strong><p>Prioritise what matters and keep your deadlines in sight.</p></div>
+<p class="side-author">Aarnav Jain<br><span>SIT223 · 7.3HD</span></p></aside>
+<main class="container">
+<header><div><p class="eyebrow">YOUR PERSONAL WORKSPACE</p><h1>Make room for progress.</h1><p class="subtitle" id="today-label">Plan your work. Track your progress.</p></div><span id="health" class="badge">Checking server…</span></header>
+<section class="stats" aria-label="Task statistics">
+<article><span>Total tasks</span><strong id="total">0</strong><small>Your work, in one place</small></article>
+<article><span>In progress</span><strong id="pending">0</strong><small>Keep the momentum going</small></article>
+<article><span>Completed</span><strong id="completed">0</strong><small>Every finish counts</small></article>
+<article class="overdue-card"><span>Overdue</span><strong id="overdue">0</strong><small>Ready for your attention</small></article>
+</section>
+<section class="progress-panel" aria-label="Completion progress"><div><strong id="progress-label">A fresh start</strong><span id="progress-text">0% complete</span></div><progress id="progress" max="100" value="0">0%</progress></section>
+<section class="panel create-panel"><div class="section-heading"><h2>Add to your plan</h2><span class="section-hint">One task at a time.</span></div>
+<form id="task-form"><label for="title">Task title</label><input id="title" name="title" type="text" maxlength="120" required placeholder="What would you like to get done?">
+<div class="planning-row"><div><label for="priority">Priority</label><select id="priority"><option value="low">Low · when there’s time</option><option value="medium" selected>Medium · keep moving</option><option value="high">High · focus first</option></select></div><div><label for="due-date">Due date <span class="optional">(optional)</span></label><input id="due-date" type="date" min="1000-01-01" max="9999-12-31"></div><button id="add-button" type="submit">＋ Add task</button></div></form>
+<p id="message" role="status" aria-live="polite"></p></section>
+<section class="panel"><div class="section-heading"><h2>Your tasks <span id="visible-count" class="count">0</span></h2><button id="refresh" type="button" class="secondary">↻ Refresh</button></div>
+<div class="filters"><div><label for="search">Search tasks</label><input id="search" type="search" placeholder="Find something in your plan…"></div><div><label for="status-filter">Status</label><select id="status-filter"><option value="all">All tasks</option><option value="pending">In progress</option><option value="completed">Completed</option><option value="overdue">Overdue</option></select></div><div><label for="priority-filter">Priority</label><select id="priority-filter"><option value="all">All priorities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div><div><label for="sort">Sort by</label><select id="sort"><option value="newest">Newest first</option><option value="priority">Priority first</option><option value="due">Due date</option></select></div></div>
+<p id="empty" class="empty">Your plan is a blank canvas. Add your first task above.</p><ul id="task-list" aria-label="Tasks"></ul></section>
+<footer><span id="environment">Loading environment…</span><a href="/health">Health</a><a href="/metrics">Metrics</a></footer>
+</main></body></html>
