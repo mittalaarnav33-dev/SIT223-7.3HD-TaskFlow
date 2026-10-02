@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TaskFlow | Task Manager</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+</head>
+<body>
+    <main class="container">
+        <header>
+            <div>
+                <p class="eyebrow">AARNAV JAIN · SIT223 7.3HD</p>
+                <h1>TaskFlow</h1>
+                <p class="subtitle">Plan your work. Track your progress.</p>
+            </div>
+            <span id="health" class="badge">Checking server…</span>
+        </header>
+
+        <section class="stats" aria-label="Task statistics">
+            <article><span>Total tasks</span><strong id="total">0</strong></article>
+            <article><span>In progress</span><strong id="pending">0</strong></article>
+            <article><span>Completed</span><strong id="completed">0</strong></article>
+        </section>
+
+        <section class="panel">
+            <h2>Create a task</h2>
+            <form id="task-form">
+                <label for="title">Task title</label>
+                <div class="form-row">
+                    <input id="title" name="title" type="text"
+                        maxlength="120" required
+                        placeholder="What do you need to work on?">
+                    <button id="add-button" type="submit">Add task</button>
+                </div>
+            </form>
+            <p id="message" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="panel">
+            <div class="section-heading">
+                <h2>Your tasks</h2>
+                <button id="refresh" type="button" class="secondary">Refresh</button>
+            </div>
+            <p id="empty">No tasks yet. Add your first task above.</p>
+            <ul id="task-list" aria-label="Tasks"></ul>
+        </section>
+
+        <footer>
+            <span id="environment">Loading environment…</span>
+            <a href="/health">Health</a>
+            <a href="/metrics">Metrics</a>
+        </footer>
+    </main>
+</body>
+</html>

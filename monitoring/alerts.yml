@@ -1,0 +1,21 @@
+﻿# Thresholds are short to make the assessment demonstration practical.
+groups:
+  - name: taskflow-production
+    rules:
+      - alert: TaskFlowProductionDown
+        expr: up{job="taskflow-production"} == 0
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "TaskFlow production is unavailable"
+          description: "Production metrics have been unreachable for at least 15 seconds."
+
+      - alert: TaskFlowServerErrors
+        expr: sum(increase(taskapp_http_requests_total{job="taskflow-production",status=~"5.."}[1m])) >= 3
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "TaskFlow is returning server errors"
+          description: "At least three HTTP 5xx responses occurred within one minute."
